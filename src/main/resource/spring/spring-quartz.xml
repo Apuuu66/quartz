@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <!--配置事务管理器-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <!--注入数据库连接池-->
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!--方式一-->
+
+    <bean id="simpleJobDetail"
+          class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="myBean"/>
+        <property name="targetMethod" value="printMessage"/>
+    </bean>
+
+    <bean id="firstComplexJobDetail"
+          class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+        <property name="jobClass"
+                  value="com.kevin.quartz.FirstScheduledJob"/>
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="anotherBean" value-ref="anotherBean"/>
+            </map>
+        </property>
+        <property name="Durability" value="true"/>
+    </bean>
+    <bean class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean" id="simpleTrigger">
+        <property name="jobDetail" ref="simpleJobDetail"/>
+        <property name="startDelay" value="1000"/>
+        <property name="repeatInterval" value="1000"/>
+    </bean>
+    <bean class="org.springframework.scheduling.quartz.CronTriggerFactoryBean" id="cronTrigger">
+        <property name="jobDetail" ref="firstComplexJobDetail"/>
+        <property name="cronExpression" value="0/5 * * ? * *"/>
+    </bean>
+
+    <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean" id="stdScheduler">
+        <property name="jobDetails">
+            <list>
+                <ref bean="simpleJobDetail"/>
+                <ref bean="firstComplexJobDetail"/>
+            </list>
+        </property>
+
+        <property name="triggers">
+            <list>
+                <ref bean="simpleTrigger"/>
+                <ref bean="cronTrigger"/>
+            </list>
+        </property>
+    </bean>
+    <context:component-scan base-package="com.kevin.*"/>
+</beans>
