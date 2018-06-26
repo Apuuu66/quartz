@@ -19,7 +19,6 @@ import java.util.List;
 public class UserController {
     @Autowired
     private UserService userService;
-
     @RequestMapping("/list")
     @ResponseBody
     public List<User> getUserList() {
